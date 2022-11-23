@@ -52,7 +52,7 @@ public class RoutePatternAnalyzer : DiagnosticAnalyzer
             else
             {
                 var token = child.AsToken();
-                if (!RouteStringSyntaxDetector.IsRouteStringSyntaxToken(token, context.SemanticModel, cancellationToken, out var _))
+                if (!RouteStringSyntaxDetector.IsRouteStringSyntaxToken(token, context.SemanticModel, cancellationToken, out var options))
                 {
                     continue;
                 }
@@ -62,11 +62,10 @@ public class RoutePatternAnalyzer : DiagnosticAnalyzer
                     return;
                 }
 
-                var usageContext = RoutePatternUsageDetector.BuildContext(token, context.SemanticModel, wellKnownTypes, cancellationToken);
+                var usageContext = RoutePatternUsageDetector.BuildContext(options, token, context.SemanticModel, wellKnownTypes, cancellationToken);
 
                 var virtualChars = CSharpVirtualCharService.Instance.TryConvertToVirtualChars(token);
-                var routePatternOptions = usageContext.IsMvcAttribute ? RoutePatternOptions.MvcAttributeRoute : RoutePatternOptions.DefaultRoute;
-                var tree = RoutePatternParser.TryParse(virtualChars, routePatternOptions);
+                var tree = RoutePatternParser.TryParse(virtualChars, usageContext.RoutePatternOptions);
                 if (tree == null)
                 {
                     continue;

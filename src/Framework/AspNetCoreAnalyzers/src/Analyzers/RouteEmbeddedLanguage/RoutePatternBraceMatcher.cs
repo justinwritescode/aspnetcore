@@ -23,11 +23,15 @@ internal class RoutePatternBraceMatcher : IAspNetCoreEmbeddedLanguageBraceMatche
             return null;
         }
 
-        var usageContext = RoutePatternUsageDetector.BuildContext(token, semanticModel, wellKnownTypes, cancellationToken);
+        if (!RouteStringSyntaxDetector.IsRouteStringSyntaxToken(token, semanticModel, cancellationToken, out var options))
+        {
+            return null;
+        }
+
+        var usageContext = RoutePatternUsageDetector.BuildContext(options, token, semanticModel, wellKnownTypes, cancellationToken);
 
         var virtualChars = CSharpVirtualCharService.Instance.TryConvertToVirtualChars(token);
-        var routePatternOptions = usageContext.IsMvcAttribute ? RoutePatternOptions.MvcAttributeRoute : RoutePatternOptions.DefaultRoute;
-        var tree = RoutePatternParser.TryParse(virtualChars, routePatternOptions);
+        var tree = RoutePatternParser.TryParse(virtualChars, usageContext.RoutePatternOptions);
         if (tree == null)
         {
             return null;

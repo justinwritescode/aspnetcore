@@ -65,7 +65,13 @@ public class RouteParameterUnusedParameterFixer : CodeFixProvider
         var param = root.FindNode(diagnostic.Location.SourceSpan);
 
         var token = param.GetFirstToken();
-        var usageContext = RoutePatternUsageDetector.BuildContext(token, semanticModel, wellKnownTypes, cancellationToken);
+
+        if (!RouteStringSyntaxDetector.IsRouteStringSyntaxToken(token, semanticModel, cancellationToken, out var options))
+        {
+            return document;
+        }
+
+        var usageContext = RoutePatternUsageDetector.BuildContext(options, token, semanticModel, wellKnownTypes, cancellationToken);
 
         // Check that the route is used in a context with a method, e.g. attribute on an action or Map method.
         if (usageContext.MethodSyntax == null)

@@ -145,6 +145,7 @@ public sealed class FrameworkParametersCompletionProvider : CompletionProvider
 
         SyntaxToken routeStringToken;
         SyntaxNode methodNode;
+        RoutePatternOptions routePatternOptions;
 
         if (container.Parent.IsKind(SyntaxKind.Argument))
         {
@@ -183,6 +184,8 @@ public sealed class FrameworkParametersCompletionProvider : CompletionProvider
 
                 parentOpt = token;
             }
+
+            routePatternOptions = RoutePatternOptions.DefaultRoute;
         }
         else if (container.IsKind(SyntaxKind.Parameter))
         {
@@ -217,6 +220,8 @@ public sealed class FrameworkParametersCompletionProvider : CompletionProvider
 
                 parentOpt = token;
             }
+
+            routePatternOptions = RoutePatternOptions.MvcAttributeRoute;
         }
         else
         {
@@ -224,7 +229,7 @@ public sealed class FrameworkParametersCompletionProvider : CompletionProvider
         }
 
         var virtualChars = CSharpVirtualCharService.Instance.TryConvertToVirtualChars(routeStringToken);
-        var tree = RoutePatternParser.TryParse(virtualChars, supportTokenReplacement: false);
+        var tree = RoutePatternParser.TryParse(virtualChars, routePatternOptions);
         if (tree == null)
         {
             return;
