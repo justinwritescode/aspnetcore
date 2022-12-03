@@ -1,0 +1,20 @@
+<!--
+ * Directory.Build.targets
+ *
+ *   Created: 2022-11-29-07:19:57
+ *   Modified: 2022-11-29-07:19:58
+ *
+ *   Author: Justin Chase <justin@justinwritescode.com>
+ *
+ *   Copyright © 2022 Justin Chase, All Rights Reserved
+ *      License: MIT (https://opensource.org/licenses/MIT)
+-->
+
+<Project Sdk="NuGetPush">
+  <PropertyGroup>
+    <PackageIcon />
+  </PropertyGroup>
+  <ItemGroup>
+    <None Remove="Icon.png" />
+  </ItemGroup>
+</Project>

@@ -13,6 +13,7 @@ namespace Microsoft.AspNetCore.Identity;
 
 internal static class Rfc6238AuthenticationService
 {
+    private const int HMACSHA1HashSizeInBytes = 20;
     private static readonly TimeSpan _timestep = TimeSpan.FromMinutes(3);
     private static readonly Encoding _encoding = new UTF8Encoding(false, true);
 #if NETSTANDARD2_0 || NETFRAMEWORK
@@ -47,7 +48,7 @@ internal static class Rfc6238AuthenticationService
         {
             modifierCombinedBytes = ApplyModifier(timestepAsBytes, modifierBytes);
         }
-        Span<byte> hash = stackalloc byte[HMACSHA1.HashSizeInBytes];
+        Span<byte> hash = stackalloc byte[HMACSHA1HashSizeInBytes];
         res = HMACSHA1.TryHashData(key, modifierCombinedBytes, hash, out var written);
         Debug.Assert(res);
         Debug.Assert(written == hash.Length);

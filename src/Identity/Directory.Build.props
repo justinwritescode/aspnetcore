@@ -2,7 +2,22 @@
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory)..\, Directory.Build.props))\Directory.Build.props" />
 
   <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <TargetFrameworks>net6.0</TargetFrameworks>
+    <!-- <TargetFramework Condition="'$(IsNet60Lib)' != 'true'">netstandard2.0</TargetFramework> -->
+    <!-- <TargetFramework>netstandard2.0</TargetFramework> -->
     <IdentityTestSharedSourceRoot>$(MSBuildThisFileDirectory)test\Shared\</IdentityTestSharedSourceRoot>
+    <DefaultNetCoreTargetFramework>net6.0</DefaultNetCoreTargetFramework>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <AddPublicApiAnalyzers>false</AddPublicApiAnalyzers>
+    <LangVersion>preview</LangVersion>
+    <EnablePreviewFeatures>true</EnablePreviewFeatures>
+    <Authors>Microsoft Corporation &amp; Justin Chase &lt;justin@justinwritescode.com&gt;</Authors>
+    <Copyright>Microsoft Corporation &amp; Justin Chase &lt;justin@justinwritescode.com&gt;</Copyright>
+    <AssemblyVersion>8.0.0</AssemblyVersion>
+    <PackageVersion>$(AssemblyVersion)-JustinWritesCodeMods</PackageVersion>
+    <Version>$(PackageVersion)</Version>
+    <FileVersion>$(PackageVersion)</FileVersion>
   </PropertyGroup>
 
 </Project>

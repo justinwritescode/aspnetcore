@@ -1,6 +1,6 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-
+#pragma warning disable
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -20,7 +20,7 @@ namespace Microsoft.AspNetCore.Identity;
 /// <typeparam name="TUserClaim">The type representing a claim.</typeparam>
 /// <typeparam name="TUserLogin">The type representing a user external login.</typeparam>
 /// <typeparam name="TUserToken">The type representing a user token.</typeparam>
-public abstract class UserStoreBase<TUser, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TKey, TUserClaim, TUserLogin, TUserToken> :
+public abstract partial class UserStoreBase<TKey, TUser, TRole, TUserClaim, TUserRole, TUserLogin, TRoleClaim, TUserToken> :
     IUserLoginStore<TUser>,
     IUserClaimStore<TUser>,
     IUserPasswordStore<TUser>,
@@ -33,11 +33,14 @@ public abstract class UserStoreBase<TUser, [DynamicallyAccessedMembers(Dynamical
     IUserAuthenticationTokenStore<TUser>,
     IUserAuthenticatorKeyStore<TUser>,
     IUserTwoFactorRecoveryCodeStore<TUser>
-    where TUser : IdentityUser<TKey>
+    where TUser : IdentityUser<TKey, TUser, TRole, TUserClaim, TUserRole, TUserLogin, TRoleClaim, TUserToken>, new()
+    where TRole : IdentityRole<TKey, TUser, TRole, TUserClaim, TUserRole, TUserLogin, TRoleClaim, TUserToken>, new()
     where TKey : IEquatable<TKey>
-    where TUserClaim : IdentityUserClaim<TKey>, new()
-    where TUserLogin : IdentityUserLogin<TKey>, new()
-    where TUserToken : IdentityUserToken<TKey>, new()
+    where TUserClaim : IdentityUserClaim<TKey, TUser, TRole, TUserClaim, TUserRole, TUserLogin, TRoleClaim, TUserToken>, new()
+    where TUserRole : IdentityUserRole<TKey, TUser, TRole, TUserClaim, TUserRole, TUserLogin, TRoleClaim, TUserToken>, new()
+    where TUserLogin : IdentityUserLogin<TKey, TUser, TRole, TUserClaim, TUserRole, TUserLogin, TRoleClaim, TUserToken>, new()
+    where TRoleClaim : IdentityRoleClaim<TKey, TUser, TRole, TUserClaim, TUserRole, TUserLogin, TRoleClaim, TUserToken>, new()
+    where TUserToken : IdentityUserToken<TKey, TUser, TRole, TUserClaim, TUserRole, TUserLogin, TRoleClaim, TUserToken>, new()
 {
     /// <summary>
     /// Creates a new instance.
@@ -480,7 +483,7 @@ public abstract class UserStoreBase<TUser, [DynamicallyAccessedMembers(Dynamical
         {
             throw new ArgumentNullException(nameof(user));
         }
-        return Task.FromResult(user.EmailConfirmed);
+        return Task.FromResult(user.IsEmailConfirmed);
     }
 
     /// <summary>
@@ -498,7 +501,7 @@ public abstract class UserStoreBase<TUser, [DynamicallyAccessedMembers(Dynamical
         {
             throw new ArgumentNullException(nameof(user));
         }
-        user.EmailConfirmed = confirmed;
+        user.IsEmailConfirmed = confirmed;
         return Task.CompletedTask;
     }
 
@@ -517,7 +520,7 @@ public abstract class UserStoreBase<TUser, [DynamicallyAccessedMembers(Dynamical
         {
             throw new ArgumentNullException(nameof(user));
         }
-        user.Email = email;
+        user.EmailAddress = email;
         return Task.CompletedTask;
     }
 
@@ -535,7 +538,7 @@ public abstract class UserStoreBase<TUser, [DynamicallyAccessedMembers(Dynamical
         {
             throw new ArgumentNullException(nameof(user));
         }
-        return Task.FromResult(user.Email);
+        return Task.FromResult(user.EmailAddress);
     }
 
     /// <summary>
@@ -554,7 +557,7 @@ public abstract class UserStoreBase<TUser, [DynamicallyAccessedMembers(Dynamical
         {
             throw new ArgumentNullException(nameof(user));
         }
-        return Task.FromResult(user.NormalizedEmail);
+        return Task.FromResult(user.NormalizedEmailAddress);
     }
 
     /// <summary>
@@ -572,7 +575,7 @@ public abstract class UserStoreBase<TUser, [DynamicallyAccessedMembers(Dynamical
         {
             throw new ArgumentNullException(nameof(user));
         }
-        user.NormalizedEmail = normalizedEmail;
+        // user.NormalizedEmailAddress = normalizedEmail;
         return Task.CompletedTask;
     }
 
@@ -696,7 +699,7 @@ public abstract class UserStoreBase<TUser, [DynamicallyAccessedMembers(Dynamical
         {
             throw new ArgumentNullException(nameof(user));
         }
-        return Task.FromResult(user.LockoutEnabled);
+        return Task.FromResult(user.IsLockoutEnabled);
     }
 
     /// <summary>
@@ -714,7 +717,7 @@ public abstract class UserStoreBase<TUser, [DynamicallyAccessedMembers(Dynamical
         {
             throw new ArgumentNullException(nameof(user));
         }
-        user.LockoutEnabled = enabled;
+        user.IsLockoutEnabled = enabled;
         return Task.CompletedTask;
     }
 
@@ -771,7 +774,7 @@ public abstract class UserStoreBase<TUser, [DynamicallyAccessedMembers(Dynamical
         {
             throw new ArgumentNullException(nameof(user));
         }
-        return Task.FromResult(user.PhoneNumberConfirmed);
+        return Task.FromResult(user.IsPhoneNumberConfirmed);
     }
 
     /// <summary>
@@ -789,7 +792,7 @@ public abstract class UserStoreBase<TUser, [DynamicallyAccessedMembers(Dynamical
         {
             throw new ArgumentNullException(nameof(user));
         }
-        user.PhoneNumberConfirmed = confirmed;
+        user.IsPhoneNumberConfirmed = confirmed;
         return Task.CompletedTask;
     }
 
@@ -849,7 +852,7 @@ public abstract class UserStoreBase<TUser, [DynamicallyAccessedMembers(Dynamical
         {
             throw new ArgumentNullException(nameof(user));
         }
-        user.TwoFactorEnabled = enabled;
+        user.IsTwoFactorEnabled = enabled;
         return Task.CompletedTask;
     }
 
@@ -871,7 +874,7 @@ public abstract class UserStoreBase<TUser, [DynamicallyAccessedMembers(Dynamical
         {
             throw new ArgumentNullException(nameof(user));
         }
-        return Task.FromResult(user.TwoFactorEnabled);
+        return Task.FromResult(user.IsTwoFactorEnabled);
     }
 
     /// <summary>
@@ -1087,23 +1090,33 @@ public abstract class UserStoreBase<TUser, [DynamicallyAccessedMembers(Dynamical
 /// <typeparam name="TUserLogin">The type representing a user external login.</typeparam>
 /// <typeparam name="TUserToken">The type representing a user token.</typeparam>
 /// <typeparam name="TRoleClaim">The type representing a role claim.</typeparam>
-public abstract class UserStoreBase<TUser, TRole, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TKey, TUserClaim, TUserRole, TUserLogin, TUserToken, TRoleClaim> :
-    UserStoreBase<TUser, TKey, TUserClaim, TUserLogin, TUserToken>,
-    IUserRoleStore<TUser>
-    where TUser : IdentityUser<TKey>
-    where TRole : IdentityRole<TKey>
+public abstract partial class UserStoreBase<TKey, TUser, TRole, TUserClaim, TUserRole, TUserLogin, TRoleClaim, TUserToken> :
+    IUserLoginStore<TUser>,
+    IUserClaimStore<TUser>,
+    IUserPasswordStore<TUser>,
+    IUserSecurityStampStore<TUser>,
+    IUserEmailStore<TUser>,
+    IUserLockoutStore<TUser>,
+    IUserPhoneNumberStore<TUser>,
+    IQueryableUserStore<TUser>,
+    IUserTwoFactorStore<TUser>,
+    IUserAuthenticationTokenStore<TUser>,
+    IUserAuthenticatorKeyStore<TUser>,
+    IUserTwoFactorRecoveryCodeStore<TUser>
+    where TUser : IdentityUser<TKey, TUser, TRole, TUserClaim, TUserRole, TUserLogin, TRoleClaim, TUserToken>, new()
+    where TRole : IdentityRole<TKey, TUser, TRole, TUserClaim, TUserRole, TUserLogin, TRoleClaim, TUserToken>, new()
     where TKey : IEquatable<TKey>
-    where TUserClaim : IdentityUserClaim<TKey>, new()
-    where TUserRole : IdentityUserRole<TKey>, new()
-    where TUserLogin : IdentityUserLogin<TKey>, new()
-    where TUserToken : IdentityUserToken<TKey>, new()
-    where TRoleClaim : IdentityRoleClaim<TKey>, new()
+    where TUserClaim : IdentityUserClaim<TKey, TUser, TRole, TUserClaim, TUserRole, TUserLogin, TRoleClaim, TUserToken>, new()
+    where TUserRole : IdentityUserRole<TKey, TUser, TRole, TUserClaim, TUserRole, TUserLogin, TRoleClaim, TUserToken>, new()
+    where TUserLogin : IdentityUserLogin<TKey, TUser, TRole, TUserClaim, TUserRole, TUserLogin, TRoleClaim, TUserToken>, new()
+    where TRoleClaim : IdentityRoleClaim<TKey, TUser, TRole, TUserClaim, TUserRole, TUserLogin, TRoleClaim, TUserToken>, new()
+    where TUserToken : IdentityUserToken<TKey, TUser, TRole, TUserClaim, TUserRole, TUserLogin, TRoleClaim, TUserToken>, new()
 {
-    /// <summary>
-    /// Creates a new instance.
-    /// </summary>
-    /// <param name="describer">The <see cref="IdentityErrorDescriber"/> used to describe store errors.</param>
-    public UserStoreBase(IdentityErrorDescriber describer) : base(describer) { }
+    // /// <summary>
+    // /// Creates a new instance.
+    // /// </summary>
+    // /// <param name="describer">The <see cref="IdentityErrorDescriber"/> used to describe store errors.</param>
+    // public UserStoreBase(IdentityErrorDescriber describer) : base(describer) { }
 
     /// <summary>
     /// Called to create a new instance of a <see cref="IdentityUserRole{TKey}"/>.

@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using System;
 
 namespace Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
@@ -124,14 +125,14 @@ public abstract class IdentityUserContext<TUser, TKey, TUserClaim, TUserLogin, T
         {
             b.HasKey(u => u.Id);
             b.HasIndex(u => u.NormalizedUserName).HasDatabaseName("UserNameIndex").IsUnique();
-            b.HasIndex(u => u.NormalizedEmail).HasDatabaseName("EmailIndex");
+            b.HasIndex(u => u.NormalizedEmailAddress).HasDatabaseName("EmailIndex");
             b.ToTable("AspNetUsers");
             b.Property(u => u.ConcurrencyStamp).IsConcurrencyToken();
 
             b.Property(u => u.UserName).HasMaxLength(256);
             b.Property(u => u.NormalizedUserName).HasMaxLength(256);
-            b.Property(u => u.Email).HasMaxLength(256);
-            b.Property(u => u.NormalizedEmail).HasMaxLength(256);
+            b.Property(u => u.EmailAddress).HasMaxLength(256);
+            b.Property(u => u.NormalizedEmailAddress).HasMaxLength(256);
 
             if (encryptPersonalData)
             {
@@ -151,6 +152,7 @@ public abstract class IdentityUserContext<TUser, TKey, TUserClaim, TUserLogin, T
             b.HasMany<TUserClaim>().WithOne().HasForeignKey(uc => uc.UserId).IsRequired();
             b.HasMany<TUserLogin>().WithOne().HasForeignKey(ul => ul.UserId).IsRequired();
             b.HasMany<TUserToken>().WithOne().HasForeignKey(ut => ut.UserId).IsRequired();
+            b.HasMany<IdentityRole>(u => u.Roles).WithMany();
         });
 
         builder.Entity<TUserClaim>(b =>

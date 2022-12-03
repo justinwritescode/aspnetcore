@@ -271,7 +271,7 @@ public class RoleManager<TRole> : IDisposable where TRole : class
     /// The <see cref="Task"/> that represents the asynchronous operation, containing the name of the
     /// specified <paramref name="role"/>.
     /// </returns>
-    public virtual Task<string?> GetRoleNameAsync(TRole role)
+    public virtual Task<string> GetRoleNameAsync(TRole role)
     {
         ThrowIfDisposed();
         return Store.GetRoleNameAsync(role, CancellationToken);

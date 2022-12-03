@@ -1,10 +1,14 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using System;
 using System.ComponentModel;
 using System.Linq;
 using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
+using System.Threading.Tasks;
+using System.Threading;
+using System.Collections.Generic;
 
 namespace Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
@@ -220,7 +224,7 @@ public class RoleStore<TRole, TContext, TKey, TUserRole, TRoleClaim> :
     /// <param name="role">The role whose name should be returned.</param>
     /// <param name="cancellationToken">The <see cref="CancellationToken"/> used to propagate notifications that the operation should be canceled.</param>
     /// <returns>A <see cref="Task{TResult}"/> that contains the name of the role.</returns>
-    public virtual Task<string?> GetRoleNameAsync(TRole role, CancellationToken cancellationToken = default(CancellationToken))
+    public virtual Task<string> GetRoleNameAsync(TRole role, CancellationToken cancellationToken = default(CancellationToken))
     {
         cancellationToken.ThrowIfCancellationRequested();
         ThrowIfDisposed();
@@ -245,6 +249,10 @@ public class RoleStore<TRole, TContext, TKey, TUserRole, TRoleClaim> :
         if (role == null)
         {
             throw new ArgumentNullException(nameof(role));
+        }
+        if (roleName is null)
+        {
+            throw new ArgumentNullException(nameof(roleName));
         }
         role.Name = roleName;
         return Task.CompletedTask;
@@ -311,7 +319,7 @@ public class RoleStore<TRole, TContext, TKey, TUserRole, TRoleClaim> :
     /// <param name="role">The role whose normalized name should be retrieved.</param>
     /// <param name="cancellationToken">The <see cref="CancellationToken"/> used to propagate notifications that the operation should be canceled.</param>
     /// <returns>A <see cref="Task{TResult}"/> that contains the name of the role.</returns>
-    public virtual Task<string?> GetNormalizedRoleNameAsync(TRole role, CancellationToken cancellationToken = default(CancellationToken))
+    public virtual Task<string> GetNormalizedRoleNameAsync(TRole role, CancellationToken cancellationToken = default(CancellationToken))
     {
         cancellationToken.ThrowIfCancellationRequested();
         ThrowIfDisposed();
@@ -337,6 +345,10 @@ public class RoleStore<TRole, TContext, TKey, TUserRole, TRoleClaim> :
         {
             throw new ArgumentNullException(nameof(role));
         }
+        if (normalizedName is null)
+        {
+            throw new ArgumentNullException(nameof(normalizedName));
+        }
         role.NormalizedName = normalizedName;
         return Task.CompletedTask;
     }
@@ -346,7 +358,10 @@ public class RoleStore<TRole, TContext, TKey, TUserRole, TRoleClaim> :
     /// </summary>
     protected void ThrowIfDisposed()
     {
-        ObjectDisposedException.ThrowIf(_disposed, this);
+        if (_disposed)
+        {
+            throw new ObjectDisposedException(GetType().Name);
+        }
     }
 
     /// <summary>
@@ -368,7 +383,7 @@ public class RoleStore<TRole, TContext, TKey, TUserRole, TRoleClaim> :
             throw new ArgumentNullException(nameof(role));
         }
 
-        return await RoleClaims.Where(rc => rc.RoleId.Equals(role.Id)).Select(c => new Claim(c.ClaimType!, c.ClaimValue!)).ToListAsync(cancellationToken);
+        return await RoleClaims.Where(rc => rc.RoleId.Equals(role.Id)).Select(c => new Claim(c.Type.ToString()!, c.Value!)).ToListAsync(cancellationToken);
     }
 
     /// <summary>
@@ -412,7 +427,7 @@ public class RoleStore<TRole, TContext, TKey, TUserRole, TRoleClaim> :
         {
             throw new ArgumentNullException(nameof(claim));
         }
-        var claims = await RoleClaims.Where(rc => rc.RoleId.Equals(role.Id) && rc.ClaimValue == claim.Value && rc.ClaimType == claim.Type).ToListAsync(cancellationToken);
+        var claims = await RoleClaims.Where(rc => rc.RoleId.Equals(role.Id) && rc.Value == claim.Value && rc.Type.Equals(claim.Type)).ToListAsync(cancellationToken);
         foreach (var c in claims)
         {
             RoleClaims.Remove(c);
@@ -433,5 +448,5 @@ public class RoleStore<TRole, TContext, TKey, TUserRole, TRoleClaim> :
     /// <param name="claim">The associated claim.</param>
     /// <returns>The role claim entity.</returns>
     protected virtual TRoleClaim CreateRoleClaim(TRole role, Claim claim)
-        => new TRoleClaim { RoleId = role.Id, ClaimType = claim.Type, ClaimValue = claim.Value };
+        => (new TRoleClaim().InitializeFromClaim(claim) as TRoleClaim)!; // { RoleId = role.Id, Type = claim.Type, Value = claim.Value };
 }

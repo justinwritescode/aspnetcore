@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
@@ -43,9 +42,9 @@ public class UserManager<TUser> : IDisposable where TUser : class
         new Dictionary<string, IUserTwoFactorTokenProvider<TUser>>();
 
     private bool _disposed;
-#if NETSTANDARD2_0 || NETFRAMEWORK
+// #if NETSTANDARD2_0 || NETFRAMEWORK
     private static readonly RandomNumberGenerator _rng = RandomNumberGenerator.Create();
-#endif
+// #endif
     private readonly IServiceProvider _services;
 
     /// <summary>
@@ -2327,20 +2326,20 @@ public class UserManager<TUser> : IDisposable where TUser : class
         mask |= mask >> 8;
         mask |= mask >> 16;
 
-#if NETCOREAPP
-        Span<uint> resultBuffer = stackalloc uint[1];
-#else
+// #if NETCOREAPP
+        // Span<uint> resultBuffer = stackalloc uint[1];
+// #else
         var resultBuffer = new byte[1];
-#endif
+// #endif
         uint result;
 
         do
         {
-#if NETCOREAPP
-            RandomNumberGenerator.Fill(MemoryMarshal.AsBytes(resultBuffer));
-#else
+// #if NETCOREAPP
+            // RandomNumberGenerator.Fill(MemoryMarshal.AsBytes(resultBuffer));
+// #else
             _rng.GetBytes(resultBuffer);
-#endif
+// #endif
             result = mask & resultBuffer[0];
         }
         while (result > range);
@@ -2504,13 +2503,13 @@ public class UserManager<TUser> : IDisposable where TUser : class
 
     private static string NewSecurityStamp()
     {
-#if NETSTANDARD2_0 || NETFRAMEWORK
+// #if NETSTANDARD2_0 || NETFRAMEWORK
         byte[] bytes = new byte[20];
         _rng.GetBytes(bytes);
         return Base32.ToBase32(bytes);
-#else
-        return Base32.GenerateBase32();
-#endif
+// #else
+//         return Base32.GenerateBase32();
+// #endif
     }
 
     // IUserLoginStore methods

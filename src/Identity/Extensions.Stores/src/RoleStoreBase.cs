@@ -1,6 +1,6 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-
+#pragma warning disable
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -19,13 +19,17 @@ namespace Microsoft.AspNetCore.Identity;
 /// <typeparam name="TKey">The type of the primary key for a role.</typeparam>
 /// <typeparam name="TUserRole">The type of the class representing a user role.</typeparam>
 /// <typeparam name="TRoleClaim">The type of the class representing a role claim.</typeparam>
-public abstract class RoleStoreBase<TRole, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TKey, TUserRole, TRoleClaim> :
+public abstract class RoleStoreBase<TKey, TUser, TRole, TUserClaim, TUserRole, TUserLogin, TRoleClaim, TUserToken> :
     IQueryableRoleStore<TRole>,
     IRoleClaimStore<TRole>
-    where TRole : IdentityRole<TKey>
+    where TUser : IdentityUser<TKey, TUser, TRole, TUserClaim, TUserRole, TUserLogin, TRoleClaim, TUserToken>, new()
+    where TRole : IdentityRole<TKey, TUser, TRole, TUserClaim, TUserRole, TUserLogin, TRoleClaim, TUserToken>, new()
     where TKey : IEquatable<TKey>
-    where TUserRole : IdentityUserRole<TKey>, new()
-    where TRoleClaim : IdentityRoleClaim<TKey>, new()
+    where TUserClaim : IdentityUserClaim<TKey, TUser, TRole, TUserClaim, TUserRole, TUserLogin, TRoleClaim, TUserToken>, new()
+    where TUserRole : IdentityUserRole<TKey, TUser, TRole, TUserClaim, TUserRole, TUserLogin, TRoleClaim, TUserToken>, new()
+    where TUserLogin : IdentityUserLogin<TKey, TUser, TRole, TUserClaim, TUserRole, TUserLogin, TRoleClaim, TUserToken>, new()
+    where TRoleClaim : IdentityRoleClaim<TKey, TUser, TRole, TUserClaim, TUserRole, TUserLogin, TRoleClaim, TUserToken>, new()
+    where TUserToken : IdentityUserToken<TKey, TUser, TRole, TUserClaim, TUserRole, TUserLogin, TRoleClaim, TUserToken>, new()
 {
     /// <summary>
     /// Constructs a new instance of <see cref="RoleStoreBase{TRole, TKey, TUserRole, TRoleClaim}"/>.
@@ -95,7 +99,7 @@ public abstract class RoleStoreBase<TRole, [DynamicallyAccessedMembers(Dynamical
     /// <param name="role">The role whose name should be returned.</param>
     /// <param name="cancellationToken">The <see cref="CancellationToken"/> used to propagate notifications that the operation should be canceled.</param>
     /// <returns>A <see cref="Task{TResult}"/> that contains the name of the role.</returns>
-    public virtual Task<string?> GetRoleNameAsync(TRole role, CancellationToken cancellationToken = default(CancellationToken))
+    public virtual Task<string> GetRoleNameAsync(TRole role, CancellationToken cancellationToken = default(CancellationToken))
     {
         cancellationToken.ThrowIfCancellationRequested();
         ThrowIfDisposed();
@@ -120,6 +124,10 @@ public abstract class RoleStoreBase<TRole, [DynamicallyAccessedMembers(Dynamical
         if (role == null)
         {
             throw new ArgumentNullException(nameof(role));
+        }
+        if (roleName == null)
+        {
+            throw new ArgumentNullException(nameof(roleName));
         }
         role.Name = roleName;
         return Task.CompletedTask;
@@ -177,7 +185,7 @@ public abstract class RoleStoreBase<TRole, [DynamicallyAccessedMembers(Dynamical
     /// <param name="role">The role whose normalized name should be retrieved.</param>
     /// <param name="cancellationToken">The <see cref="CancellationToken"/> used to propagate notifications that the operation should be canceled.</param>
     /// <returns>A <see cref="Task{TResult}"/> that contains the name of the role.</returns>
-    public virtual Task<string?> GetNormalizedRoleNameAsync(TRole role, CancellationToken cancellationToken = default(CancellationToken))
+    public virtual Task<string> GetNormalizedRoleNameAsync(TRole role, CancellationToken cancellationToken = default(CancellationToken))
     {
         cancellationToken.ThrowIfCancellationRequested();
         ThrowIfDisposed();
@@ -202,6 +210,10 @@ public abstract class RoleStoreBase<TRole, [DynamicallyAccessedMembers(Dynamical
         if (role == null)
         {
             throw new ArgumentNullException(nameof(role));
+        }
+        if (normalizedName == null)
+        {
+            throw new ArgumentNullException(nameof(normalizedName));
         }
         role.NormalizedName = normalizedName;
         return Task.CompletedTask;
@@ -264,5 +276,5 @@ public abstract class RoleStoreBase<TRole, [DynamicallyAccessedMembers(Dynamical
     /// <param name="claim">The associated claim.</param>
     /// <returns>The role claim entity.</returns>
     protected virtual TRoleClaim CreateRoleClaim(TRole role, Claim claim)
-        => new TRoleClaim { RoleId = role.Id, ClaimType = claim.Type, ClaimValue = claim.Value };
+        => new TRoleClaim { RoleId = role.Id, Type = new Uri(claim.Type), Value = claim.Value };
 }

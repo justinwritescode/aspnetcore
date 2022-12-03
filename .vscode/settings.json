@@ -1,15 +1,20 @@
 {
-  "files.trimTrailingWhitespace": true,
-  "files.associations": {
-    "*.*proj": "xml",
-    "*.props": "xml",
-    "*.targets": "xml",
-    "*.tasks": "xml"
-  },
-  "markdownlint.config": {
-    "MD028": false,
-    "MD025": {
-      "front_matter_title": ""
+    "files.trimTrailingWhitespace": true,
+    "files.associations": {
+        "*.*proj": "msbuild",
+        "*.props": "msbuild",
+        "*.targets": "msbuild",
+        "*.tasks": "msbuild"
+    },
+    "markdownlint.config": {
+        "MD028": false,
+        "MD025": {
+            "front_matter_title": ""
+        }
+    },
+    "workbench.colorCustomizations": {
+        "activityBar.background": "#2E187D",
+        "titleBar.activeBackground": "#4021AF",
+        "titleBar.activeForeground": "#FDFCFE"
     }
-  }
 }

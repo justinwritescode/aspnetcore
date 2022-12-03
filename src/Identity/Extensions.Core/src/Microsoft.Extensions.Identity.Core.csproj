@@ -8,20 +8,32 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <PackageTags>aspnetcore;identity;membership</PackageTags>
     <IsTrimmable>true</IsTrimmable>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
-    <Reference Include="Microsoft.AspNetCore.Cryptography.KeyDerivation" />
-    <Reference Include="Microsoft.Extensions.Logging" />
-    <Reference Include="Microsoft.Extensions.Options" />
+    <PackageReference Include="Microsoft.AspNetCore.Cryptography.KeyDerivation" Version="[7.0.0,)" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="[7.0.0,)" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="[7.0.0,)" />
 
-    <Compile Include="$(SharedSourceRoot)TrimmingAttributes.cs" LinkBase="Shared"
-      Condition="'$(TargetFramework)' != '$(DefaultNetCoreTargetFramework)'" />
+    <Compile Include="$(SharedSourceRoot)TrimmingAttributes.cs" LinkBase="Shared" Condition="'$(TargetFramework)' != '$(DefaultNetCoreTargetFramework)'" />
   </ItemGroup>
 
-  <ItemGroup
-      Condition="'$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == '$(DefaultNetFxTargetFramework)' OR '$(MSBuildRestoreSessionId)' == ''">
-    <Reference Include="System.ComponentModel.Annotations" />
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == '$(DefaultNetFxTargetFramework)' OR '$(MSBuildRestoreSessionId)' == ''">
+    <PackageReference Include="System.ComponentModel.Annotations" Version="[5.0.0,)" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Update="Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Condition=" '$(EnableDefaultEmbeddedResourceItems)' == 'true' " Update="Resources.resx">
+      <CustomTool>ResXFileCodeGenerator</CustomTool>
+    </EmbeddedResource>
+  </ItemGroup>
 </Project>

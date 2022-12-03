@@ -51,7 +51,7 @@ public interface IRoleStore<TRole> : IDisposable where TRole : class
     /// <param name="role">The role whose name should be returned.</param>
     /// <param name="cancellationToken">The <see cref="CancellationToken"/> used to propagate notifications that the operation should be canceled.</param>
     /// <returns>A <see cref="Task{TResult}"/> that contains the name of the role.</returns>
-    Task<string?> GetRoleNameAsync(TRole role, CancellationToken cancellationToken);
+    Task<string> GetRoleNameAsync(TRole role, CancellationToken cancellationToken);
 
     /// <summary>
     /// Sets the name of a role in the store as an asynchronous operation.
@@ -68,7 +68,7 @@ public interface IRoleStore<TRole> : IDisposable where TRole : class
     /// <param name="role">The role whose normalized name should be retrieved.</param>
     /// <param name="cancellationToken">The <see cref="CancellationToken"/> used to propagate notifications that the operation should be canceled.</param>
     /// <returns>A <see cref="Task{TResult}"/> that contains the name of the role.</returns>
-    Task<string?> GetNormalizedRoleNameAsync(TRole role, CancellationToken cancellationToken);
+    Task<string> GetNormalizedRoleNameAsync(TRole role, CancellationToken cancellationToken);
 
     /// <summary>
     /// Set a role's normalized name as an asynchronous operation.

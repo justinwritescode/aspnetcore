@@ -1,10 +1,14 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Security.Claims;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 
 namespace Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -249,7 +253,7 @@ public class UserStore<TUser, TRole, TContext, [DynamicallyAccessedMembers(Dynam
         cancellationToken.ThrowIfCancellationRequested();
         ThrowIfDisposed();
 
-        return Users.FirstOrDefaultAsync(u => u.NormalizedUserName == normalizedUserName, cancellationToken);
+        return Users.FirstOrDefaultAsync(u => u.UserName == normalizedUserName, cancellationToken);
     }
 
     /// <summary>
@@ -493,11 +497,11 @@ public class UserStore<TUser, TRole, TContext, [DynamicallyAccessedMembers(Dynam
             throw new ArgumentNullException(nameof(newClaim));
         }
 
-        var matchedClaims = await UserClaims.Where(uc => uc.UserId.Equals(user.Id) && uc.ClaimValue == claim.Value && uc.ClaimType == claim.Type).ToListAsync(cancellationToken);
+        var matchedClaims = await UserClaims.Where(uc => uc.UserId.Equals(user.Id) && uc.Value == claim.Value && uc.Type.Equals(claim.Type)).ToListAsync(cancellationToken);
         foreach (var matchedClaim in matchedClaims)
         {
-            matchedClaim.ClaimValue = newClaim.Value;
-            matchedClaim.ClaimType = newClaim.Type;
+            matchedClaim.Value = newClaim.Value;
+            matchedClaim.Type = newClaim.Type.ToUri(Utils.ClaimTypeUrnFormatString);
         }
     }
 
@@ -521,7 +525,7 @@ public class UserStore<TUser, TRole, TContext, [DynamicallyAccessedMembers(Dynam
         }
         foreach (var claim in claims)
         {
-            var matchedClaims = await UserClaims.Where(uc => uc.UserId.Equals(user.Id) && uc.ClaimValue == claim.Value && uc.ClaimType == claim.Type).ToListAsync(cancellationToken);
+            var matchedClaims = await UserClaims.Where(uc => uc.UserId.Equals(user.Id) && uc.Value == claim.Value && uc.Type.Equals(claim.Type)).ToListAsync(cancellationToken);
             foreach (var c in matchedClaims)
             {
                 UserClaims.Remove(c);
@@ -633,7 +637,7 @@ public class UserStore<TUser, TRole, TContext, [DynamicallyAccessedMembers(Dynam
         cancellationToken.ThrowIfCancellationRequested();
         ThrowIfDisposed();
 
-        return Users.SingleOrDefaultAsync(u => u.NormalizedEmail == normalizedEmail, cancellationToken);
+        return Users.SingleOrDefaultAsync(u => u.EmailAddress == normalizedEmail, cancellationToken);
     }
 
     /// <summary>
@@ -655,8 +659,8 @@ public class UserStore<TUser, TRole, TContext, [DynamicallyAccessedMembers(Dynam
 
         var query = from userclaims in UserClaims
                     join user in Users on userclaims.UserId equals user.Id
-                    where userclaims.ClaimValue == claim.Value
-                    && userclaims.ClaimType == claim.Type
+                    where userclaims.Value == claim.Value
+                    && userclaims.Type.Equals(claim.Type)
                     select user;
 
         return await query.ToListAsync(cancellationToken);
