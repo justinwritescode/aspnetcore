@@ -2,46 +2,32 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System.Diagnostics.CodeAnalysis;
-using Microsoft.Extensions.Internal;
+using Microsoft.AspNetCore.Components.Endpoints.FormMapping.Metadata;
+using Microsoft.Extensions.Logging;
 
 namespace Microsoft.AspNetCore.Components.Endpoints.FormMapping;
 
 // This factory is registered last, which means, dictionaries and collections, have already
 // been processed by the time we get here.
-internal class ComplexTypeConverterFactory : IFormDataConverterFactory
+internal class ComplexTypeConverterFactory(FormDataMapperOptions options, ILoggerFactory loggerFactory) : IFormDataConverterFactory
 {
-    internal static readonly ComplexTypeConverterFactory Instance = new();
+    internal FormDataMetadataFactory MetadataFactory { get; } = new FormDataMetadataFactory(options.Factories, loggerFactory);
 
     [RequiresDynamicCode(FormMappingHelpers.RequiresDynamicCodeMessage)]
     [RequiresUnreferencedCode(FormMappingHelpers.RequiresUnreferencedCodeMessage)]
     public bool CanConvert(Type type, FormDataMapperOptions options)
     {
-        if (type.GetConstructor(Type.EmptyTypes) == null && !type.IsValueType)
-        {
-            // For right now, require a public parameterless constructor.
-            return false;
-        }
-        if (type.IsGenericTypeDefinition)
-        {
-            return false;
-        }
+        // Create the metadata for the type. This walks the graph and creates metadata for all the types
+        // in the reference graph, detecting and identifying recursive types.
+        var metadata = MetadataFactory.GetOrCreateMetadataFor(type, options);
 
-        // Check that all properties have a valid converter.
-        var propertyHelper = PropertyHelper.GetVisibleProperties(type);
-        foreach (var helper in propertyHelper)
-        {
-            if (options.ResolveConverter(helper.Property.PropertyType) == null)
-            {
-                return false;
-            }
-        }
-
-        return true;
+        // If we can create metadata for the type, then we can convert it.
+        return metadata != null;
     }
 
     // We are going to compile a function that maps all the properties for the type.
     // Beware that the code below is not the actual exact code, just a simplification to understand what is happening at a high level.
-    // The general flow is as follows. For a type like Address { Street, City, Country, ZipCode }
+    // The general flow is as follows. For a type like Address { Street, City, CountryRegion, ZipCode }
     // we will generate a function that looks like:
     // public bool TryRead(ref FormDataReader reader, Type type, FormDataSerializerOptions options, out Address? result, out bool found)
     // {
@@ -49,11 +35,11 @@ internal class ComplexTypeConverterFactory : IFormDataConverterFactory
     //     bool succeeded = true;
     //     string street;
     //     string city;
-    //     string country;
+    //     string countryRegion;
     //     string zipCode;
     //     FormDataConveter<string> streetConverter;
     //     FormDataConveter<string> cityConverter;
-    //     FormDataConveter<string> countryConverter;
+    //     FormDataConveter<string> countryRegionConverter;
     //     FormDataConveter<string> zipCodeConverter;
 
     //     var streetConverter = options.ResolveConverter(typeof(string));
@@ -68,11 +54,11 @@ internal class ComplexTypeConverterFactory : IFormDataConverterFactory
     //     found ||= foundProperty;
     //     reader.PopPrefix("City");
     //
-    //     var countryConverter = options.ResolveConverter(typeof(string));
-    //     reader.PushPrefix("Country");
-    //     succeeded &= countryConverter.TryRead(ref reader, typeof(string), options, out street, out foundProperty);
+    //     var countryRegionConverter = options.ResolveConverter(typeof(string));
+    //     reader.PushPrefix("CountryRegion");
+    //     succeeded &= countryRegionConverter.TryRead(ref reader, typeof(string), options, out street, out foundProperty);
     //     found ||= foundProperty;
-    //     reader.PopPrefix("Country");
+    //     reader.PopPrefix("CountryRegion");
     //
     //     var zipCodeConverter = options.ResolveConverter(typeof(string));
     //     reader.PushPrefix("ZipCode");
@@ -85,7 +71,7 @@ internal class ComplexTypeConverterFactory : IFormDataConverterFactory
     //         result = new Address();
     //         result.Street = street;
     //         result.City = city;
-    //         result.Country = country;
+    //         result.CountryRegion = countryRegion;
     //         result.ZipCode = zipCode;
     //     }
     //     else
@@ -112,7 +98,7 @@ internal class ComplexTypeConverterFactory : IFormDataConverterFactory
     [RequiresUnreferencedCode(FormMappingHelpers.RequiresUnreferencedCodeMessage)]
     public FormDataConverter CreateConverter(Type type, FormDataMapperOptions options)
     {
-        if (Activator.CreateInstance(typeof(ComplexTypeExpressionConverterFactory<>).MakeGenericType(type))
+        if (Activator.CreateInstance(typeof(ComplexTypeExpressionConverterFactory<>).MakeGenericType(type), MetadataFactory)
             is not ComplexTypeExpressionConverterFactory factory)
         {
             throw new InvalidOperationException($"Could not create a converter factory for type {type}.");

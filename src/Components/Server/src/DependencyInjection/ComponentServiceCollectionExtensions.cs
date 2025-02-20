@@ -29,7 +29,7 @@ public static class ComponentServiceCollectionExtensions
     /// <param name="services">The <see cref="IServiceCollection"/>.</param>
     /// <param name="configure">A callback to configure <see cref="CircuitOptions"/>.</param>
     /// <returns>An <see cref="IServerSideBlazorBuilder"/> that can be used to further customize the configuration.</returns>
-    [RequiresUnreferencedCode("Server-side Blazor does not currently support native AOT.", Url = "https://aka.ms/aspnet/nativeaot")]
+    [RequiresUnreferencedCode("Server-side Blazor does not currently support trimming or native AOT.", Url = "https://aka.ms/aspnet/trimming")]
     public static IServerSideBlazorBuilder AddServerSideBlazor(this IServiceCollection services, Action<CircuitOptions>? configure = null)
     {
         var builder = new DefaultServerSideBlazorBuilder(services);
@@ -61,12 +61,12 @@ public static class ComponentServiceCollectionExtensions
         // user's configuration. So even if the user has multiple independent server-side
         // Components entrypoints, this lot is the same and repeated registrations are a no-op.
         services.TryAddSingleton<ICircuitFactory, CircuitFactory>();
-        services.TryAddSingleton<IServerComponentDeserializer, ServerComponentDeserializer>();
         services.TryAddSingleton<ICircuitHandleRegistry, CircuitHandleRegistry>();
         services.TryAddSingleton<RootComponentTypeCache>();
         services.TryAddSingleton<ComponentParameterDeserializer>();
         services.TryAddSingleton<ComponentParametersTypeCache>();
         services.TryAddSingleton<CircuitIdFactory>();
+        services.TryAddScoped<IServerComponentDeserializer, ServerComponentDeserializer>();
         services.TryAddScoped<IErrorBoundaryLogger, RemoteErrorBoundaryLogger>();
         services.TryAddScoped<AntiforgeryStateProvider, DefaultAntiforgeryStateProvider>();
 

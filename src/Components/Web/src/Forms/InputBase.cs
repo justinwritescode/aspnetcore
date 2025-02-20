@@ -24,6 +24,7 @@ public abstract class InputBase<TValue> : ComponentBase, IDisposable
     private bool _previousParsingAttemptFailed;
     private ValidationMessageStore? _parsingValidationMessages;
     private Type? _nullableUnderlyingType;
+    private bool _shouldGenerateFieldNames;
 
     [CascadingParameter] private EditContext? CascadedEditContext { get; set; }
 
@@ -179,7 +180,7 @@ public abstract class InputBase<TValue> : ComponentBase, IDisposable
     protected abstract bool TryParseValueFromString(string? value, [MaybeNullWhen(false)] out TValue result, [NotNullWhen(false)] out string? validationErrorMessage);
 
     /// <summary>
-    /// Gets a CSS class string that combines the <c>class</c> attribute and and a string indicating
+    /// Gets a CSS class string that combines the <c>class</c> attribute and a string indicating
     /// the status of the field being edited (a combination of "modified", "valid", and "invalid").
     /// Derived components should typically use this value for the primary HTML element's 'class' attribute.
     /// </summary>
@@ -204,7 +205,7 @@ public abstract class InputBase<TValue> : ComponentBase, IDisposable
                 return Convert.ToString(nameAttributeValue, CultureInfo.InvariantCulture) ?? string.Empty;
             }
 
-            if (EditContext?.ShouldUseFieldIdentifiers ?? false)
+            if (_shouldGenerateFieldNames)
             {
                 if (_formattedValueExpression is null && ValueExpression is not null)
                 {
@@ -241,6 +242,12 @@ public abstract class InputBase<TValue> : ComponentBase, IDisposable
             {
                 EditContext = CascadedEditContext;
                 EditContext.OnValidationStateChanged += _validationStateChangedHandler;
+                _shouldGenerateFieldNames = EditContext.ShouldUseFieldIdentifiers;
+            }
+            else
+            {
+                // Ideally we'd know if we were in an SSR context but we don't
+                _shouldGenerateFieldNames = !OperatingSystem.IsBrowser();
             }
 
             _nullableUnderlyingType = Nullable.GetUnderlyingType(typeof(TValue));
@@ -365,6 +372,13 @@ public abstract class InputBase<TValue> : ComponentBase, IDisposable
         if (EditContext is not null)
         {
             EditContext.OnValidationStateChanged -= _validationStateChangedHandler;
+        }
+
+        // Clear parsing validation messages store owned by the input when the input is disposed.
+        if (_parsingValidationMessages != null)
+        {
+            _parsingValidationMessages.Clear();
+            EditContext!.NotifyValidationStateChanged(); // when _parsingValidationMessages is not null, EditContext is also not null.
         }
 
         Dispose(disposing: true);
